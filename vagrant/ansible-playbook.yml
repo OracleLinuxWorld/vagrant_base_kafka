@@ -1,0 +1,98 @@
+- hosts: all
+  remote_user: vagrant
+  become: true
+  become_user: root
+  become_method: sudo
+
+  tasks:
+
+
+#############################################################################
+###
+### Setup Confluent repository
+###
+
+# version 5
+  - name: Add / enable the Confluent repo Confluent.dist
+    yum_repository:
+      name: Confluent_repository_dist
+      description: Confluent_repository_dist
+      baseurl: https://packages.confluent.io/rpm/5.0/7
+      gpgkey: https://packages.confluent.io/rpm/5.0/archive.key
+      file: confluent
+      gpgcheck: yes
+      enabled: yes
+
+  - name: Add / enable the Confluent repo Confluent
+    yum_repository:
+      name: Confluent_repository
+      description: Confluent_repository
+      baseurl: https://packages.confluent.io/rpm/5.0
+      gpgkey: https://packages.confluent.io/rpm/5.0/archive.key
+      file: confluent
+      gpgcheck: yes
+      enabled: yes
+
+#############################################################################
+###
+### Update entire OL7 system to the latest versions...
+###
+
+  - name: upgrade all packages
+    yum:
+      name: '*'
+      state: latest
+
+
+#############################################################################
+###
+### Install packages
+###
+
+# Note: this does NOT yet enable the services!
+#
+# This playbook is intended to
+# * take an OL7 base box
+# * update all components
+# * install all essential packages for Elastic search
+# * save time with repeated destroy/up cycles and
+# * provide you with an up2date base box while developing your own VMs
+
+  - name: Installing Confluent Kafka CORE components
+    yum:
+      name: "{{ item }}"
+      state: latest
+      update_cache: yes
+    with_items:
+      - java-1.8.0-openjdk
+      - confluent-platform-2.11
+      - unzip
+      - zip
+      - jq
+      - ntp
+      - ntpdate
+      - nano
+      - tcpdump
+    when:
+      - ansible_os_family == "RedHat"
+      - ansible_distribution_major_version == "7"
+
+
+#############################################################################
+###
+### Install beats
+###
+
+#  - name: Installing common elastic beats
+#    yum:
+#       name: "{{ item }}"
+#       state: latest
+#       update_cache: yes
+#    with_items:
+#       - filebeat
+#       - heartbeat-elastic
+#       - metricbeat
+#       - packetbeat
+#    when:
+#       - ansible_os_family == "RedHat"
+#       - ansible_distribution_major_version == "7"
